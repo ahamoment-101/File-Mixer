@@ -6,7 +6,7 @@ import { FaFile, FaTimes } from 'react-icons/fa';
 type FileNode = {
   name: string;
   type: 'file' | 'directory';
-  children?: FileNode[];
+  children?: FileNode[]; 
   path: string;
 };
 
