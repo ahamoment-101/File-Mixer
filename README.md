@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# File Mixer
 
-## Getting Started
+一个简单但功能强大的文件合并工具，支持将多个文本文件合并成一个文件，并保持良好的格式和分隔。
 
-First, run the development server:
+## 功能特点
+
+- 支持拖拽文件夹上传
+- 文件树可视化展示
+- 支持多种文本文件格式（TXT, MD, JSON, JS, TS, HTML, CSS）
+- 自动添加文件分隔符和文件名标识
+- 现代化的用户界面
+
+## 技术栈
+
+- Next.js 15
+- React 19
+- TypeScript
+- Tailwind CSS
+- React Dropzone
+
+## 快速开始
+
+### 安装依赖
+
+```bash
+npm install
+```
+
+### 开发模式
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 构建生产版本
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 启动生产服务器
 
-## Learn More
+```bash
+npm run start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 使用方法
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. 打开应用后，将包含文本文件的文件夹拖拽到指定区域
+2. 在文件树中选择需要合并的文件
+3. 点击"Mix Selected Files"按钮
+4. 合并后的文件将自动下载到本地
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 支持的文件类型
 
-## Deploy on Vercel
+- TXT
+- MD
+- JSON
+- JS
+- TS
+- HTML
+- CSS
+- Python (.py)
+- Java (.java)
+- C++ (.cpp)
+- C (.c)
+- Go (.go)
+- Ruby (.rb)
+- PHP (.php)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 贡献
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+欢迎提交 Issue 和 Pull Request！
+
+## 许可证
+
+[MIT](LICENSE)

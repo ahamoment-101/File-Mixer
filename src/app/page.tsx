@@ -1,101 +1,198 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useCallback } from 'react';
+import { useDropzone, DropzoneOptions } from 'react-dropzone';
+import { FileTree } from './components/FileTree';
+
+type FileNode = {
+  name: string;
+  type: 'file' | 'directory';
+  path: string;
+  children?: FileNode[];
+  file?: File;
+};
+
+type FileTreeData = FileNode & {
+  type: 'directory';
+  children: FileNode[];
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [showFileTree, setShowFileTree] = useState(false);
+  const [fileTreeData, setFileTreeData] = useState<FileTreeData | null>(null);
+  const [isDirectoryMode] = useState(true);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const processFiles = async (files: File[]) => {
+    setIsProcessing(true);
+    setError('');
+    try {
+      const textContents: string[] = [];
+      
+      for (const file of files) {
+        const text = await file.text();
+        const separator = '='.repeat(50);
+        const header = `${separator}\nFile: ${file.name}\n${separator}\n\n`;
+        textContents.push(header + text);
+      }
+
+      const combinedContent = textContents.join('\n\n');
+      const blob = new Blob([combinedContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'combined.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Error occurred during file processing, please try again');
+      console.error(err);
+    } finally {
+      setIsProcessing(false);
+      setShowFileTree(false);
+      setFileTreeData(null);
+    }
+  };
+
+  const handleFileTreeSelect = async (selectedFiles: string[]) => {
+    if (selectedFiles.length === 0) return;
+    const selectedFileObjects = selectedFiles.map(path => {
+      const node = findFileNode(fileTreeData, path);
+      return node?.file;
+    }).filter((file): file is File => file instanceof File);
+
+    if (selectedFileObjects.length > 0) {
+      processFiles(selectedFileObjects);
+    }
+  };
+
+  const findFileNode = (node: FileNode | null, path: string): FileNode | null => {
+    if (!node) return null;
+    if (node.type === 'file' && node.path === path) return node;
+    if (node.children) {
+      for (const child of node.children) {
+        const found = findFileNode(child, path);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const validFileTypes = ['.txt', '.md', '.json', '.js', '.ts', '.tsx', '.html', '.css', '.py', '.java', '.cpp', '.c', '.go', '.rb', '.php'];
+    const validFiles = acceptedFiles.filter(file => {
+      const extension = file.name.toLowerCase().split('.').pop() || '';
+      return validFileTypes.some(type => type.slice(1) === extension);
+    });
+
+    if (validFiles.length === 0) {
+      setError('Please select supported file types');
+      return;
+    }
+    
+    const buildFileTree = (files: File[]): FileTreeData => {
+      const root: FileTreeData = {
+        name: 'Root',
+        type: 'directory',
+        path: '/',
+        children: []
+      };
+
+      files.forEach(file => {
+        const path = file.webkitRelativePath || file.name;
+        const parts = path.split('/');
+        let current = root;
+
+        parts.forEach((part, index) => {
+          if (index === parts.length - 1) {
+            current.children.push({
+              name: part,
+              type: 'file' as const,
+              path: file.name,
+              file: file // 存储文件对象以供后续处理
+            });
+          } else {
+            let child = current.children.find(c => c.name === part && c.type === 'directory') as FileNode & { type: 'directory'; children: FileNode[] } | undefined;
+            if (!child) {
+              child = {
+                name: part,
+                type: 'directory' as const,
+                path: parts.slice(0, index + 1).join('/'),
+                children: []
+              };
+              current.children.push(child);
+            }
+            current = child;
+          }
+        });
+      });
+
+      return root;
+    };
+
+    setFileTreeData(buildFileTree(validFiles));
+    setShowFileTree(true);
+  }, []);
+
+  type CustomDropzoneOptions = DropzoneOptions & {
+    webkitdirectory?: string | boolean;
+    directory?: string;
+    mozdirectory?: string;
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    noClick: true,
+    noKeyboard: true,
+    multiple: true,
+    accept: undefined
+  } as CustomDropzoneOptions);
+
+  const inputProps = getInputProps();
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-8">
+      <h1 className="text-3xl font-bold mb-8">File Mixer</h1>
+      
+
+      
+      <div
+        {...getRootProps()}
+        className={`w-full max-w-2xl p-8 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors
+          ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}`}
+      >
+        <input {...inputProps} />
+        {isProcessing ? (
+          <p className="text-gray-600">Processing...</p>
+        ) : (
+          <p className="text-gray-600">
+            {isDragActive
+              ? 'Release to upload files'
+              : isDirectoryMode
+                ? 'Drag and drop folder here'
+                : 'Drag and drop files here'}
+          </p>
+        )}
+      </div>
+
+      {showFileTree && fileTreeData && (
+        <div className="mt-8 w-full max-w-2xl">
+          <h2 className="text-xl font-semibold mb-4">Select files to merge:</h2>
+          <FileTree data={fileTreeData} onSelect={handleFileTreeSelect} />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
+
+      {error && (
+        <p className="mt-4 text-red-500">{error}</p>
+      )}
+
+      <p className="mt-4 text-sm text-gray-500">
+        Supported file types: TXT, MD, JSON, JS, TS, TSX, HTML, CSS, Python (.py), Java (.java), C++ (.cpp), C (.c), Go (.go), Ruby (.rb), PHP (.php)
+      </p>
     </div>
   );
 }
