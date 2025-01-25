@@ -136,7 +136,10 @@ export const FileTree: React.FC<FileTreeProps> = ({ data, onSelect }) => {
                 <span className="text-sm">{getFileName(path)}</span>
               </div>
               <button
-                onClick={() => handleRemoveFile(path)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveFile(path);
+                }}
                 className="text-gray-400 hover:text-red-500 transition-colors">
                 <FaTimes />
               </button>
