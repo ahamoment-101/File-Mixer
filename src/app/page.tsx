@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useDropzone, DropzoneOptions } from 'react-dropzone';
 import { FileTree } from './components/FileTree';
+import { FaXTwitter } from 'react-icons/fa6';
 
 type FileNode = {
   name: string;
@@ -157,9 +158,6 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
       <h1 className="text-3xl font-bold mb-8">File Mixer</h1>
-      
-
-      
       <div
         {...getRootProps()}
         className={`w-full max-w-2xl p-8 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors
@@ -193,6 +191,13 @@ export default function Home() {
       <p className="mt-4 text-sm text-gray-500">
         Supported file types: TXT, MD, JSON, JS, TS, TSX, HTML, CSS, Python (.py), Java (.java), C++ (.cpp), C (.c), Go (.go), Ruby (.rb), PHP (.php)
       </p>
+      <a href="https://x.com/darrenlopez001"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 mb-8 inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors">
+        <FaXTwitter className="w-5 h-5" />
+         Follow me at X
+      </a>
     </div>
   );
 }
