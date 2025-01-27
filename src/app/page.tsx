@@ -193,7 +193,7 @@ export default function Home() {
       </p>
       <a href="https://x.com/darrenlopez001"
         target="_blank"
-        rel="noopener noreferrer" 
+        rel="noopener noreferrer"
         className="mt-4 mb-8 inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors">
         <FaXTwitter className="w-5 h-5" />
          Follow me at X
